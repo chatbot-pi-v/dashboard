@@ -18,42 +18,56 @@ PDF_DIR.mkdir(exist_ok=True)
 
 @app.route('/uploadfile', methods=['POST'])
 def upload_file():
-    print("Iniciando o upload do arquivo")
-    if 'file' not in request.files:
+    print("Iniciando o upload dos arquivos")
+
+    files = request.files.getlist('files')
+    citacoes = request.form.getlist('citacoes')
+
+    if not files:
         return {"error": "Nenhum arquivo enviado"}, 400
 
-    file = request.files['file']
-    print(file)
-    if file.filename == '':
-        return {"error": "Nome do arquivo vazio"}, 400
+    os.makedirs("./docs/audio", exist_ok=True)
 
-    # Opcional: salvar o arquivo
-    file.save(f"./docs/audio/{file.filename}")
-    
-    runApp("maluzinha")
-    
-    return {"filename": file.filename, "message": "Arquivo recebido com sucesso!"}
+    for i in range(len(files)):
+        file = files[i]
+        citacao = citacoes[i] if i < len(citacoes) else ''
+        
+        if file.filename == '':
+            continue
+        
+        caminho = f"./docs/audio/{file.filename}"
+        file.save(caminho)
+        print(f"Arquivo salvo: {file.filename}, Citação: {citacao}")
+
+        runApp(citacao)
+
+    return {"message": "Todos os arquivos foram recebidos com sucesso!"}
+
 
 @app.route('/uploadlink', methods=['POST'])
 def receber_json():
     dados = request.get_json()
+    
+    if isinstance(dados, list):
+        for item in dados:
+            link = item.get("link")
+            quote = item.get("quote")
+            
+            if link and quote:
+                print(f"Link: {link} | Citação: {quote}")
+                
+                download_to_mp3(link)
+                runApp(quote) 
+    else:
+        link = dados.get("link")
+        quote = dados.get("quote")
 
-    url = dados.get("link")
-    quote = dados.get("quote")
+        if link and quote:
+            print(f"Link único: {link} | Citação: {quote}")
+            download_to_mp3(link)
+            runApp(quote)
 
-    download_to_mp3(url)
-
-    runApp(quote)
-
-    end_time = time.time()
-
-    execution_time = end_time - start_time
-    print(f"O tempo de execução foi: {execution_time} segundos")
-
-    return jsonify({
-        "mensagem": "Arquivo transcrito com sucesso",
-        "execution_time_seconds": int(execution_time)
-        }), 200
+    return {'message': 'Dados recebidos com sucesso'}, 200
 
 def runApp(quote):
     run_transcription()

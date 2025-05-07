@@ -1,14 +1,20 @@
 from pydub import AudioSegment
 from pydub.silence import split_on_silence
 import os
-import subprocess
-# from audioToTextWhisper.settings import AUDIO_DIR
-from settings_folders import AUDIO_DIR, PDF_DIR
+from concurrent.futures import ThreadPoolExecutor
+from settings_folders import AUDIO_DIR
+from pydub.utils import which
+
+AudioSegment.converter = which("ffmpeg")
+
+def exportar_chunk(i, chunk, base_nome):
+    chunk_final_path = os.path.join(AUDIO_DIR, f"{base_nome}chunk{i}.wav")
+    chunk.export(chunk_final_path, format="wav", parameters=["-ac", "1", "-ar", "16000", "-sample_fmt", "s16"])
+    return chunk_final_path
 
 def dividir_audio_por_silencio(caminho_audio):
     audio = AudioSegment.from_file(caminho_audio)
     base_nome = os.path.splitext(os.path.basename(caminho_audio))[0]
-    chunks = []
 
     partes = split_on_silence(
         audio,
@@ -17,25 +23,22 @@ def dividir_audio_por_silencio(caminho_audio):
         keep_silence=500
     )
 
+    chunks = []
+    tempo_acumulado = 0  # em milissegundos
+
     for i, chunk in enumerate(partes):
+        duracao_ms = len(chunk)
+        inicio = tempo_acumulado
+        fim = tempo_acumulado + duracao_ms
+        tempo_acumulado += duracao_ms
 
-        print(f"dividindo chuck parte {i + 1}")
+        chunk_final_path = os.path.join(AUDIO_DIR, f"{base_nome}chunk{i}.wav")
+        chunk.export(chunk_final_path, format="wav", parameters=["-ac", "1", "-ar", "16000", "-sample_fmt", "s16"])
 
-        chunk_temp_path = os.path.join(AUDIO_DIR, f"{base_nome}_chunk_{i}.mp3").replace("\\", "/")
-        chunk_final_path = os.path.join(AUDIO_DIR, f"{base_nome}_chunk_{i}.wav").replace("\\", "/")
-
-        chunk.export(chunk_temp_path, format="mp3")
-
-        subprocess.run([
-            "ffmpeg", "-y",
-            "-i", chunk_temp_path,
-            "-ac", "1",
-            "-ar", "16000",
-            "-sample_fmt", "s16",
-            chunk_final_path
-        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-        os.remove(chunk_temp_path)
-        chunks.append(chunk_final_path)
+        chunks.append({
+            "path": chunk_final_path,
+            "start": inicio / 1000,  # converter para segundos
+            "end": fim / 1000
+        })
 
     return chunks

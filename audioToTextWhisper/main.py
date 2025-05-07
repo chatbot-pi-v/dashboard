@@ -18,12 +18,12 @@ def run_transcription():
 
             for idx, chunk_path in enumerate(chunks):
                 print(f"  Transcrevendo parte {idx + 1}/{len(chunks)}...")
-                texto = transcrever_audio(chunk_path)
+                texto = transcrever_audio(chunk_path["path"])
                 if texto:
                     transcricao_completa += f"{texto}\n"
                 else:
                     transcricao_completa += f"\n[Parte {idx + 1}] ERRO NA TRANSCRIÇÃO\n"
-                os.remove(chunk_path)
+                os.remove(chunk_path["path"])
                 time.sleep(5)
 
             nome_pdf = os.path.splitext(nome_audio)[0] + ".pdf"
