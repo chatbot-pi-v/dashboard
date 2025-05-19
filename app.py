@@ -1,3 +1,4 @@
+from milvus.milvus_img import insert_images_into_milvus
 from milvus.milvus_init import initialize_milvus
 from transformLinkInMP3.main import download_to_mp3
 from audioToTextWhisper.main import run_transcription
@@ -44,7 +45,11 @@ def upload_file():
         file.save(caminho)
         print(f"Arquivo salvo: {file.filename}, Citação: {citacao}")
 
-        # runApp(citacao)
+        if pasta == "./docs/images":
+            insert_images_into_milvus()
+            return {"message": "Todos os arquivos foram recebidos com sucesso!"}
+
+        runApp(citacao)
 
     return {"message": "Todos os arquivos foram recebidos com sucesso!"}
 
