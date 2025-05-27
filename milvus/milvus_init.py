@@ -5,6 +5,7 @@ from config.settings import COLLECTION_NAME, MILVUS_DB_NAME, MILVUS_TOKEN, MILVU
 from embeddings.embedding_model import get_embeddings
 from milvus.milvus_db import create_milvus_db
 from processing.pdf_loader import load_pdfs
+from pymilvus import Collection
 
 def collection_exists(collection_name, uri, token, db_name):
     """
@@ -15,7 +16,6 @@ def collection_exists(collection_name, uri, token, db_name):
         uri=uri,
         token=token,
         db_name=db_name,
-        secure=True
     )
     return utility.has_collection(collection_name)
 
@@ -43,11 +43,18 @@ def initialize_milvus(quote):
         },
         collection_name=COLLECTION_NAME,
         index_params={
-            "index_type": "FLAT",
-            "metric_type": "L2"
+            "index_type": "IVF_SQ8", 
+            "metric_type": "IP"
         },
         consistency_level="Strong",
-        drop_old=exists  # sobrescreve apenas se já existe
+        drop_old=False
     )
+
+    collection = Collection("text_embedding")
+    collection.load()
+
+    print("\nNúmero de documentos:", collection.num_entities)
+    print("\nInformações da coleção:")
+    print(collection.describe())
 
     return vector_store
