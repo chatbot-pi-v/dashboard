@@ -46,8 +46,8 @@ def extract_clip_embedding(image_path):
 
     return normalize(embedding.reshape(1, -1), norm="l2").flatten()
 
-def insert_images_into_milvus():
-    path = "./docs/images"
+def insert_images_into_milvus(caption):
+    path = "../../docs/images"
 
     image_paths = [
         os.path.join(path, filename)
@@ -56,7 +56,7 @@ def insert_images_into_milvus():
     ]
 
     entities = [
-        {"image_path": p, "embedding": extract_clip_embedding(p), "captions": "test"}
+        {"image_path": p, "embedding": extract_clip_embedding(p), "captions": caption}
         for p in image_paths
     ]
 

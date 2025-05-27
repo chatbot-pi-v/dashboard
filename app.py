@@ -45,8 +45,8 @@ def upload_file():
         file.save(caminho)
         print(f"Arquivo salvo: {file.filename}, Citação: {citacao}")
 
-        if pasta == "./docs/images":
-            insert_images_into_milvus()
+        if pasta == "../../docs/images":
+            insert_images_into_milvus(citacao)
             return {"message": "Todos os arquivos foram recebidos com sucesso!"}
 
         runApp(citacao)

@@ -9,13 +9,12 @@ def create_milvus_db():
     uri=MILVUS_URI, 
     token=MILVUS_TOKEN, 
     db_name=MILVUS_DB_NAME, 
-    secure=True, 
     timeout=60
   )
 
   fields = [
     FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
-    FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=768),
+    FieldSchema(name="vector", dtype=DataType.FLOAT_VECTOR, dim=768),
     FieldSchema(name="file_name", dtype=DataType.VARCHAR, max_length=512),
     FieldSchema(name="quotes", dtype=DataType.VARCHAR, max_length=512),
   ]
@@ -24,15 +23,16 @@ def create_milvus_db():
 
   if COLLECTION_NAME not in list_collections():
     collection = Collection(name=COLLECTION_NAME, schema=schema)
-    collection.create_index(field_name="embedding", index_params={
-      "index_type": "IVF_FLAT", 
-      "metric_type": "L2"
-    })
+    collection.create_index(
+      field_name="vector",
+      index_params={
+        "index_type": "IVF_SQ8",
+        "metric_type": "IP",
+        "params": {"nlist": 1024}
+      }
+    )
     collection.load()
-    print(f"Coleção '{COLLECTION_NAME}' criada e carregada com sucesso.")
   else:
     collection = Collection(name=COLLECTION_NAME)
-    collection.load()
-    print(f"Coleção '{COLLECTION_NAME}' já existe e foi carregada.")
 
   return collection
