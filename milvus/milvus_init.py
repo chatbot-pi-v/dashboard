@@ -43,7 +43,7 @@ def initialize_milvus(quote):
         },
         collection_name=COLLECTION_NAME,
         index_params={
-            "index_type": "IVF_SQ8", 
+            "index_type": "IVF_FLAT", 
             "metric_type": "IP"
         },
         consistency_level="Strong",

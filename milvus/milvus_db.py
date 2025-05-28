@@ -15,20 +15,19 @@ def create_milvus_db():
   fields = [
     FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
     FieldSchema(name="vector", dtype=DataType.FLOAT_VECTOR, dim=768),
-    FieldSchema(name="file_name", dtype=DataType.VARCHAR, max_length=512),
-    FieldSchema(name="quotes", dtype=DataType.VARCHAR, max_length=512),
+    FieldSchema(name="file_name", dtype=DataType.VARCHAR, max_length=512, nullable=True),
+    FieldSchema(name="quotes", dtype=DataType.VARCHAR, max_length=2048),
   ]
 
-  schema = CollectionSchema(fields, description="Coleção de embeddings")
+  schema = CollectionSchema(fields, description="Coleção de embeddings", enable_dynamic_field=True)
 
   if COLLECTION_NAME not in list_collections():
     collection = Collection(name=COLLECTION_NAME, schema=schema)
     collection.create_index(
       field_name="vector",
       index_params={
-        "index_type": "IVF_SQ8",
+        "index_type": "IVF_FLAT",
         "metric_type": "IP",
-        "params": {"nlist": 1024}
       }
     )
     collection.load()
