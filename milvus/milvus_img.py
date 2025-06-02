@@ -22,7 +22,7 @@ collection_name = 'image_embeddings'
 fields = [
     FieldSchema(name='id', dtype=DataType.INT64, is_primary=True, auto_id=True),
     FieldSchema(name='image_path', dtype=DataType.VARCHAR, max_length=512),
-    FieldSchema(name='embedding', dtype=DataType.FLOAT_VECTOR, dim=512),
+    FieldSchema(name='vector', dtype=DataType.FLOAT_VECTOR, dim=512),
     FieldSchema(name='captions', dtype=DataType.VARCHAR, max_length=1024)
 ]
 
@@ -46,22 +46,24 @@ def extract_clip_embedding(image_path):
 
     return normalize(embedding.reshape(1, -1), norm="l2").flatten()
 
-def insert_images_into_milvus(caption):
+def insert_images_into_milvus(image_filename, caption):
     path = "../../docs/images"
+    image_path = os.path.join(path, image_filename)
 
-    image_paths = [
-        os.path.join(path, filename)
-        for filename in os.listdir(path)
-        if filename.endswith((".png", ".jpg", ".jpeg"))
-    ]
+    if not os.path.exists(image_path):
+        raise FileNotFoundError(f"Imagem não encontrada: {image_path}")
 
-    entities = [
-        {"image_path": p, "embedding": extract_clip_embedding(p), "captions": caption}
-        for p in image_paths
-    ]
+    vector = extract_clip_embedding(image_path)
 
-    collection.insert(entities)
+    entity = {
+        "image_path": image_path,
+        "vector": vector,
+        "captions": caption
+    }
+
+    collection.insert([entity])
     collection.flush()
+
 
 def search_image_by_text(query_text, top_k=1):
     collection.load()
@@ -74,7 +76,7 @@ def search_image_by_text(query_text, top_k=1):
     search_params = {"metric_type": "IP", "params": {"nprobe": 10}}
     results = collection.search(
         data=[text_embedding],
-        anns_field="embedding",
+        anns_field="vector",
         param=search_params,
         limit=top_k,
         output_fields=["image_path", "captions"],

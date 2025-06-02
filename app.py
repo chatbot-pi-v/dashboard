@@ -34,24 +34,21 @@ def upload_file():
 
     os.makedirs(pasta, exist_ok=True)
 
-    for i in range(len(files)):
-        file = files[i]
-        citacao = citacoes[i] if i < len(citacoes) else ''
-        
-        if file.filename == '':
-            continue
-        
-        caminho = f"{pasta}/{file.filename}"
-        file.save(caminho)
-        print(f"Arquivo salvo: {file.filename}, Citação: {citacao}")
+    if pasta == "../../docs/images":
+        for i in range(len(files)):
+            file = files[i]
+            citacao = citacoes[i] if i < len(citacoes) else ''
 
-        if pasta == "../../docs/images":
-            insert_images_into_milvus(citacao)
-            return {"message": "Todos os arquivos foram recebidos com sucesso!"}
+            if file.filename == '':
+                continue
 
-        runApp(citacao)
+            caminho = f"{pasta}/{file.filename}"
+            file.save(caminho)
+            print(f"Imagem salva: {file.filename}, Citação: {citacao}")
 
-    return {"message": "Todos os arquivos foram recebidos com sucesso!"}
+            insert_images_into_milvus(file.filename, citacao)
+
+    return {"message": "Todas as imagens foram inseridas no Milvus com sucesso!"}
 
 # @app.route('/uploadfile', methods=['POST'])
 # def upload_file(caminho):

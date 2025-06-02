@@ -47,7 +47,8 @@ def initialize_milvus(quote):
             "metric_type": "IP"
         },
         consistency_level="Strong",
-        drop_old=False
+        drop_old=False,
+        text_field="quotes"
     )
 
     collection = Collection("text_embedding")
