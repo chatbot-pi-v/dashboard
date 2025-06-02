@@ -14,4 +14,3 @@ def download_to_mp3(url: str):
     subprocess.run(cmd, check=True)
 
     print(f"Áudio salvo em: {AUDIO_DIR}")
-

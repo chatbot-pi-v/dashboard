@@ -49,6 +49,7 @@ def extract_clip_embedding(image_path):
 def insert_images_into_milvus(image_filename, caption):
     path = "../../docs/images"
     image_path = os.path.join(path, image_filename)
+    print(f"image_path: {image_path}")
 
     if not os.path.exists(image_path):
         raise FileNotFoundError(f"Imagem não encontrada: {image_path}")
@@ -63,7 +64,6 @@ def insert_images_into_milvus(image_filename, caption):
 
     collection.insert([entity])
     collection.flush()
-
 
 def search_image_by_text(query_text, top_k=1):
     collection.load()

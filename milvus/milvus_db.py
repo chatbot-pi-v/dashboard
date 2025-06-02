@@ -17,7 +17,7 @@ def create_milvus_db():
     FieldSchema(name="vector", dtype=DataType.FLOAT_VECTOR, dim=768),
     FieldSchema(name="file_name", dtype=DataType.VARCHAR, max_length=512, nullable=True),
     FieldSchema(name="quotes", dtype=DataType.VARCHAR, max_length=2048),
-    FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=65535, nullable=True)
+    FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=65535)
   ]
 
   schema = CollectionSchema(fields, description="Coleção de embeddings")

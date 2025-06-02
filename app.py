@@ -1,5 +1,6 @@
-from milvus.milvus_img import insert_images_into_milvus
+from pathlib import Path
 from milvus.milvus_init import initialize_milvus
+from milvus.milvus_img import insert_images_into_milvus
 from transformLinkInMP3.main import download_to_mp3
 from audioToTextWhisper.main import run_transcription
 import time
@@ -34,49 +35,25 @@ def upload_file():
 
     os.makedirs(pasta, exist_ok=True)
 
-    if pasta == "../../docs/images":
-        for i in range(len(files)):
-            file = files[i]
-            citacao = citacoes[i] if i < len(citacoes) else ''
+    for i in range(len(files)):
+        file = files[i]
+        citacao = citacoes[i] if i < len(citacoes) else ''
+        
+        if file.filename == '':
+            continue
+        
+        caminho = f"{pasta}/{file.filename}"
+        file.save(caminho)
+        print(f"file_name: {file.filename}")
+        print(f"Arquivo salvo: {file.filename}, Citação: {citacao}")
 
-            if file.filename == '':
-                continue
-
-            caminho = f"{pasta}/{file.filename}"
-            file.save(caminho)
-            print(f"Imagem salva: {file.filename}, Citação: {citacao}")
-
+        if pasta == "../../docs/images":
             insert_images_into_milvus(file.filename, citacao)
+            return {"message": "Todos os arquivos foram recebidos com sucesso!"}
 
-    return {"message": "Todas as imagens foram inseridas no Milvus com sucesso!"}
+        runApp(citacao, caminho)
 
-# @app.route('/uploadfile', methods=['POST'])
-# def upload_file(caminho):
-#     print("Iniciando o upload dos arquivos")
-
-#     files = request.files.getlist('files')
-#     citacoes = request.form.getlist('citacoes')
-
-#     if not files:
-#         return {"error": "Nenhum arquivo enviado"}, 400
-
-#     os.makedirs("./docs/audio", exist_ok=True)
-
-#     for i in range(len(files)):
-#         file = files[i]
-#         citacao = citacoes[i] if i < len(citacoes) else ''
-        
-#         if file.filename == '':
-#             continue
-        
-#         caminho = f"./docs/audio/{file.filename}"
-#         file.save(caminho)
-#         print(f"Arquivo salvo: {file.filename}, Citação: {citacao}")
-
-#         runApp(citacao)
-
-#     return {"message": "Todos os arquivos foram recebidos com sucesso!"}
-
+    return {"message": "Todos os arquivos foram recebidos com sucesso!"}
 
 @app.route('/uploadlink', methods=['POST'])
 def receber_json():
@@ -90,8 +67,14 @@ def receber_json():
             if link and quote:
                 print(f"Link: {link} | Citação: {quote}")
                 
+                
                 download_to_mp3(link)
-                runApp(quote) 
+                folder_path = Path('../../docs/audio')
+
+                file_names = [file.name for file in folder_path.iterdir() if file.is_file()]
+
+                print(f"File name: {file_names}")
+                runApp(quote, file_names[0])
     else:
         link = dados.get("link")
         quote = dados.get("quote")
@@ -99,13 +82,19 @@ def receber_json():
         if link and quote:
             print(f"Link único: {link} | Citação: {quote}")
             download_to_mp3(link)
-            runApp(quote)
+
+            folder_path = Path('../../docs/audio')
+
+            file_names = [file.name for file in folder_path.iterdir() if file.is_file()]
+
+            print(f"File name: {file_names}")
+            runApp(quote, file_names[0])
 
     return {'message': 'Dados recebidos com sucesso'}, 200
 
-def runApp(quote):
+def runApp(quote, file_name):
     run_transcription()
-    initialize_milvus(quote)
+    initialize_milvus(quote, file_name)
     
     
 if __name__ == '__main__':
